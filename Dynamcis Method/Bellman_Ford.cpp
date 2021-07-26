@@ -1,87 +1,65 @@
 #include<iostream>
 #include<fstream>
 using namespace std;
-#define INF 99
+#define INF 9999;
 
-int pred[100][100] , dist[100][100];
+struct node
+{
+	int u , v;
+};
+
+int pred[100] , dist[100];
 int nv;
 int graph[1000][1000];
 int output[1000][1000]={0};
+node edg[1000];
 
-void Floyd_Warshall()
+bool bellmanford(int n_edg, int s)
 {
-    for(int i=0;i<nv;i++)
-	{
-		for(int j=0;j<nv;j++)
-		{
-			pred[i][j] = -1;
-			dist[i][j] = INF;
-		}
-	}
-
 	for(int i=0;i<nv;i++)
 	{
-		for(int j=0;j<nv;j++)
-		{
-			dist[i][j]=graph[i][j];
-			if(graph[i][j]==0 || graph[i][j]==INF)
-				pred[i][j]=-1;
-			else
-                pred[i][j]=i;
-		}
+		pred[i]=-1;
+		dist[i]=INF;
 	}
 
-	for(int k=0;k<nv;k++)
+	dist[s]=0;
+
+	for(int i=1;i<nv;i++)
 	{
-		for(int i=0;i<nv;i++)
+		for(int j=0;j<=n_edg;j++)
 		{
-			for(int j=0;j<nv;j++)
+			node x=edg[j];
+			if(dist[x.u]+graph[x.u][x.v]<dist[x.v])
 			{
-				if(dist[i][k]+dist[k][j] < dist[i][j])
-				{
-					dist[i][j]=dist[i][k]+dist[k][j];
-					pred[i][j]=pred[k][j];
-				}
+				dist[x.v]=dist[x.u]+graph[x.u][x.v];
+				pred[x.v]=x.u;
 			}
 		}
-
 	}
-}
 
-void shortest_path(int i, int j)
-{
-	if(i==j)
+	for(int i=0 ; i<=n_edg ; ++i)
 	{
-		cout<<char(i+'A')<<"->";
-		return;
+		node x=edg[i];
+		if(dist[x.u]+graph[x.u][x.v]<dist[x.v])
+            return false;
 	}
 
-	if(pred[i][j]==-1)
-	{
-		cout<<"No shortest path is found"<<endl;
-		return;
-	}
-
-	else
-	{
-		shortest_path(i,pred[i][j]);
-		cout<<char(j+'A')<<"->";
-	}
+	return true;
 }
 
 int main()
 {
     fstream infile;
-    infile.open("Floyd_input.txt" , ios::in);
+    infile.open("Bellma_input.txt" , ios::in);
     if(!infile)
     {
-        cout<<"Error!"<<endl;
+        cout<<"Error on opening file"<<endl;
         return 0;
     }
     infile>>nv;
-    for(int i=0 ; i<nv ; ++i)
+    for(int i=0;i<nv;i++)
     {
-        for(int j=0 ; j<nv ; ++j)
+        for(int j=0;j<nv;j++)
             infile>>graph[i][j];
     }
 
@@ -90,28 +68,35 @@ int main()
     for(int i=0;i<nv;i++)
     {
         for(int j=0;j<nv;j++)
-            cout<<graph[i][j]<<" ";
-        cout<<endl;
-    }
-
-    Floyd_Warshall();
-
-    for(int i=0;i<nv;i++)
-    {
-        for(int j=0;j<nv;j++)
         {
-            if(dist[i][j]==INF)
-                cout<<"INF"<<"\t";
-            else
-                cout<<dist[i][j]<<"\t";
+            if(graph[i][j])
+            {
+                edg[n_edg].u=i;
+                edg[n_edg].v=j;
+                n_edg++;
+            }
+            cout<<graph[i][j]<<" ";
         }
         cout<<endl;
     }
-    int i , j;
-    cout<<"Enter two vertices"<<endl;
-    cin>>i>>j;
-    cout<<"shortest path between "<<char(i+'A')<<"and "<<char(j+'A')<<" is"<<endl;
-    shortest_path(i,j);
-    return 0;
-}
 
+    cout<<"Number of edges"<<n_edg<<endl;
+    cout<<"Edge list is"<<endl;
+    for(int i=0;i<n_edg;i++)
+        cout<<char(edg[i].u+'A')<<"->"<<char(edg[i].v+'A')<<endl;
+
+    int s;
+    cout<<"Enter the source vertext"<<endl;
+    cin>>s;
+
+    if(bellmanford(n_edg-1,s))
+    {
+        for(int i=0;i<nv;i++)
+	    {
+            if(i!=s)
+                cout<<char(s+'A')<<"->"<<dist[i]<<"->"<<char(i+'A')<<endl;
+	    }
+    }
+    else
+    	cout<<"Negative cycle is present"<<endl;
+}
